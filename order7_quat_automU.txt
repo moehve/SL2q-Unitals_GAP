@@ -1,0 +1,192 @@
+
+# Search for affine SL(2,7)-unitals with S quaternion and automorphism u
+# ======================================================================
+
+q:=7; p:=7;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# The generators of the group S
+erz1:=[[-1,2],[-1,1]]*z^0;
+erz2:=[[1,1],[-2,-1]]*z^0;
+S:=Elements(Group(erz1,erz2));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism u and the sets A and B
+# ---------------------------------------
+
+u:=StructuralCopy(erz1);
+
+# The set A of invariant points under conjugation by u
+A:=[];
+for x in menge do if x^u=x then Add(A,x); fi; od;
+
+# The set of points in A that contains only one point of each pair x and x^-1
+inv:=[];
+for x in A do if not x^-1 in inv then Add(inv,x); fi; od;
+
+#	Then inv = [ [ [ 0*Z(7), Z(7) ], [ Z(7)^2, Z(7) ] ], [ [ 0*Z(7), Z(7)^4 ], [ Z(7)^5, Z(7)^4 ] ] ]
+
+
+# The set B of points with x^u=x^-1
+B:=[];
+for x in menge do if x^u=x^-1 then Add(B,x); fi; od;
+
+# The set of points in B that contains only one point of each pair x and x^-1
+zweier:=[];
+for x in B do if not x^-1 in zweier then Add(zweier,x); fi; od;
+
+#	Then zweier = [ [ [ 0*Z(7), Z(7)^0 ], [ Z(7)^3, Z(7) ] ], [ [ 0*Z(7), Z(7) ], [ Z(7)^2, Z(7)^3 ] ],
+#  [ [ 0*Z(7), Z(7)^2 ], [ Z(7), Z(7) ] ], [ [ 0*Z(7), Z(7)^3 ], [ Z(7)^0, Z(7)^4 ] ],
+#  [ [ 0*Z(7), Z(7)^4 ], [ Z(7)^5, Z(7)^0 ] ], [ [ 0*Z(7), Z(7)^5 ], [ Z(7)^4, Z(7)^4 ] ],
+#  [ [ Z(7)^0, Z(7)^2 ], [ Z(7)^4, Z(7)^2 ] ], [ [ Z(7)^0, Z(7)^3 ], [ Z(7)^3, Z(7)^2 ] ],
+#  [ [ Z(7)^0, Z(7)^4 ], [ Z(7), Z(7)^3 ] ], [ [ Z(7), 0*Z(7) ], [ Z(7)^3, Z(7)^5 ] ],
+#  [ [ Z(7), Z(7) ], [ Z(7)^5, Z(7) ] ], [ [ Z(7), Z(7)^2 ], [ 0*Z(7), Z(7)^5 ] ],
+#  [ [ Z(7)^2, 0*Z(7) ], [ Z(7)^3, Z(7)^4 ] ], [ [ Z(7)^2, Z(7)^2 ], [ 0*Z(7), Z(7)^4 ] ],
+#  [ [ Z(7)^2, Z(7)^3 ], [ Z(7)^5, Z(7)^5 ] ], [ [ Z(7)^3, Z(7)^0 ], [ Z(7)^0, Z(7)^5 ] ],
+#  [ [ Z(7)^3, Z(7)^5 ], [ Z(7), Z(7)^5 ] ], [ [ Z(7)^4, Z(7) ], [ Z(7)^5, Z(7)^4 ] ] ]
+
+
+# The other points in menge
+auswahlmenge:=Difference(menge,Union(A,B));
+
+
+# Auxiliary function B: Search for the three additional points w, x and y with given a, b, c and d in the set zweier
+# ------------------------------------------------------------------------------------------------------------------
+
+suche_blockb := function(a,b,c,d,output)
+	local w, x, y, testhut, testhut2, testhut3;
+	
+	for w in auswahlmenge do
+		if w^u=b*w*(a^-1) then
+			testhut:=hut([a,w,b*w]);
+			if Length(Intersection(menge,testhut))=12 then
+				for x in Difference(auswahlmenge,testhut) do
+					if x^u=c*x*(a^-1) then
+						testhut2:=hut([a,w,b*w,x,c*x]);
+						if Length(Intersection(menge,testhut2))=30 then
+							for y in Difference(auswahlmenge,testhut2) do
+								if y^u=d*y*(a^-1) then
+									testhut3:=hut([a,w,b*w,x,c*x,y,d*y]);
+									if Length(Intersection(menge,testhut3))=56 then	
+										Add(output,[a,w,b*w,x,c*x,y,d*y]);
+									fi;
+								fi;
+							od;
+						fi;
+					fi;
+				od;
+			fi;
+		fi;
+	od;
+	
+end;
+
+
+# Main function B: Search all combinations of four points in zweier
+# -----------------------------------------------------------------
+
+suche_bloeckeb := function()
+	local zweier_bloecke, i, j, k, l;
+	
+	zweier_bloecke:=[];
+	
+	for i in [1..Length(zweier)] do for j in [i+1..Length(zweier)] do for k in [j+1..Length(zweier)] do for l in [k+1..Length(zweier)] do
+		suche_blockb(zweier[i],zweier[j],zweier[k],zweier[l],zweier_bloecke);
+	od; od; od; od;
+	
+	return zweier_bloecke;
+	
+end;
+
+  
+# Auxiliary function A: Search for the three additional points w, x and y with given a in inv
+# -------------------------------------------------------------------------------------------
+
+suche_blocka := function(a,output)
+	local w, x, y, testhut, drei;
+	
+	for drei in IteratorOfCombinations(auswahlmenge,3) do
+		w:=StructuralCopy(drei[1]); x:=StructuralCopy(drei[2]); y:=StructuralCopy(drei[3]);
+		testhut:=hut([a,w,x,y,w^u,x^u,y^u]);
+		if Length(Intersection(menge,testhut))=56 then
+			Add(output,[a,w,x,y,w^u,x^u,y^u]);
+		fi;
+	od;
+	
+end;
+
+# Main function A: Search inv
+# ---------------------------
+
+suche_bloeckea := function()
+	local finv, zweier_bloecke;
+	
+	zweier_bloecke:=[];
+
+	for finv in inv do suche_blocka(finv,zweier_bloecke); od;
+
+	return zweier_bloecke;
+	
+end;
+
+
+# Create a list of all sets of quotients of a given list of blocks
+# ----------------------------------------------------------------
+
+berechne_hutpositionen := function(bloecke)
+local b, hutpositionen, x;
+
+	hutpositionen:=[];
+
+	for b in bloecke do
+		Add(hutpositionen,Set(List(Difference(hut(b),[IdentityMat(2,GF(7))]),x->Position(menge,x))));
+	od;
+	
+	return(Set(hutpositionen));
+	
+end;
+
+
+# The result
+# ==========
+#
+# suche_bloeckeb() yields a list of 10564 arcuate blocks and
+# berechne_hutpositionen(suche_bloeckeb()) yields a set of 10564 56-element subsets of [1..280]
+#
+# suche_bloeckea() yields a list of 78752 arcuate blocks and
+# berechne_hutpositionen(suche_bloeckea()) yields a set of 9844 56-element subsets of [1..280]
+#
+# The union yields a set of 20408 56-element subsets of [1..280]
+#
+
+
+

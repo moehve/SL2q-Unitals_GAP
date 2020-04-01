@@ -1,0 +1,135 @@
+
+# Exhaustive search for affine SL(2,5)-unitals
+# ============================================
+
+q:=5; p:=5;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=[[z^3,z^0],[z^3,z^3]];
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# Auxiliary function: Search for all arcuate blocks through a fixed point such that their set of quotients (without 1) lies completely in a given set
+# ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+suche_bloecke := function(testmenge)
+	local block, auswahlmenge, bloecke, a, b, c, d;
+	
+	# Fix the first element
+	block:=[StructuralCopy(testmenge[1])];
+	auswahlmenge:=[Difference(testmenge,hut(block))];
+	bloecke:=[];
+	
+	for a in auswahlmenge[1] do
+		if Length(Intersection(testmenge,hut(Union(block,[a]))))=2*3 then
+			Add(block,a);
+			auswahlmenge[2]:=Difference(auswahlmenge[1]{[Position(auswahlmenge[1],a)..Length(auswahlmenge[1])]},hut(block));
+			
+			for b in auswahlmenge[2] do
+				if Length(Intersection(testmenge,hut(Union(block,[b]))))=3*4 then
+					Add(block,b);
+					auswahlmenge[3]:=Difference(auswahlmenge[2]{[Position(auswahlmenge[2],b)..Length(auswahlmenge[2])]},hut(block));
+					
+					for c in auswahlmenge[3] do
+						if Length(Intersection(testmenge,hut(Union(block,[c]))))=4*5 then
+							Add(block,c);
+							auswahlmenge[4]:=Difference(auswahlmenge[3]{[Position(auswahlmenge[3],c)..Length(auswahlmenge[3])]},hut(block));
+							
+							for d in auswahlmenge[4] do
+								if Length(Intersection(testmenge,hut(Union(block,[d]))))=5*6 then
+									Add(block,d);
+									# There is an arcuate block
+									Add(bloecke,StructuralCopy(block));
+									
+									Remove(block);
+								fi;
+							od;
+							
+							Remove(block);
+						fi;
+					od;
+					
+					Remove(block);
+				fi;
+			od;
+					
+			Remove(block);
+		fi;
+	od;
+
+	return(bloecke);
+	
+end;
+
+# Main function: Search for three arcuate blocks with disjoint sets of quotients in the set menge
+# -----------------------------------------------------------------------------------------------
+
+suche_unitale := function()
+	local unitale, b, b2, b3, x;
+	
+	unitale:=[];
+	
+	for b in suche_bloecke(menge) do
+		for b2 in suche_bloecke(Difference(menge,hut(b))) do
+			b3:=suche_bloecke(Difference(menge,Union(hut(b),hut(b2))));
+			for x in b3 do
+				Add(unitale,[b,b2,x]);
+			od;
+		od;
+	od;
+
+	return unitale;
+	
+end;
+
+
+# The result
+# ==========
+#
+# b:=suche_unitale()
+#
+# b = [ [ [ [ [ 0*Z(5), Z(5)^0 ], [ Z(5)^2, 0*Z(5) ] ], [ [ Z(5)^0, Z(5)^3 ], [ Z(5)^3, 0*Z(5) ] ],
+#          [ [ Z(5)^2, Z(5)^3 ], [ Z(5)^2, Z(5) ] ], [ [ Z(5)^3, Z(5)^0 ], [ 0*Z(5), Z(5) ] ],
+#          [ [ Z(5)^3, Z(5)^2 ], [ Z(5)^3, Z(5)^0 ] ] ],
+#      [ [ [ 0*Z(5), Z(5)^0 ], [ Z(5)^2, Z(5)^2 ] ], [ [ 0*Z(5), Z(5)^2 ], [ Z(5)^0, Z(5)^2 ] ],
+#          [ [ Z(5), 0*Z(5) ], [ 0*Z(5), Z(5)^3 ] ], [ [ Z(5)^3, Z(5)^0 ], [ Z(5)^2, 0*Z(5) ] ],
+#          [ [ Z(5)^3, Z(5)^2 ], [ Z(5)^0, 0*Z(5) ] ] ],
+#      [ [ [ Z(5)^0, Z(5)^0 ], [ Z(5)^0, Z(5) ] ], [ [ Z(5), 0*Z(5) ], [ Z(5)^2, Z(5)^3 ] ],
+#          [ [ Z(5), Z(5)^3 ], [ Z(5), Z(5)^0 ] ], [ [ Z(5)^3, Z(5) ], [ 0*Z(5), Z(5) ] ],
+#          [ [ Z(5)^3, Z(5)^3 ], [ Z(5)^0, Z(5)^3 ] ] ] ] ]
+#
+# There is thus only one isomorphism type of affine SL(2,5)-unitals.
+#
+
+
+

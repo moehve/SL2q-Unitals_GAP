@@ -1,0 +1,129 @@
+
+# Exhaustive search for affine SL(2,4)-unitals
+# ============================================
+
+# Since SL(2,4) is isomorphic to PSL(2,4) and permutations are easier to handle, we will compute in PSL(2,4)
+q:=4; p:=2;
+sl:=Elements(PSL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=(1,2,3,4,5);
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# Auxiliary function: Search for all arcuate blocks through a fixed point such that their set of quotients (without 1) lies completely in a given set
+# ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+suche_bloecke := function(testmenge)
+	local block, auswahlmenge, bloecke, a, b, c;
+	
+	# Fix the first element
+	block:=[StructuralCopy(testmenge[1])];
+	auswahlmenge:=[Difference(testmenge,hut(block))];
+	bloecke:=[];
+	
+	for a in auswahlmenge[1] do
+		if Length(Intersection(testmenge,hut(Union(block,[a]))))=2*3 then
+			Add(block,a);
+			auswahlmenge[2]:=Difference(auswahlmenge[1]{[Position(auswahlmenge[1],a)..Length(auswahlmenge[1])]},hut(block));
+			
+			for b in auswahlmenge[2] do
+				if Length(Intersection(testmenge,hut(Union(block,[b]))))=3*4 then
+					Add(block,b);
+					auswahlmenge[3]:=Difference(auswahlmenge[2]{[Position(auswahlmenge[2],b)..Length(auswahlmenge[2])]},hut(block));
+					
+					for c in auswahlmenge[3] do
+						if Length(Intersection(testmenge,hut(Union(block,[c]))))=4*5 then
+							Add(block,c);
+							# There is an arcuate block
+							Add(bloecke,StructuralCopy(block));
+														
+							Remove(block);
+						fi;
+					od;
+					
+					Remove(block);
+				fi;
+			od;
+					
+			Remove(block);
+		fi;
+	od;
+
+	return(bloecke);
+	
+end;
+
+# Main function: Search for two arcuate blocks with disjoint sets of quotients in the set menge
+# ---------------------------------------------------------------------------------------------
+
+suche_unitale := function()
+	local unitale, b, b2;
+	
+	unitale:=[];
+	
+	for b in suche_bloecke(menge) do
+		b2:=suche_bloecke(Difference(menge,hut(b)));
+		for x in b2 do
+			Add(unitale,[b,x]);
+		od;
+	od;
+
+	return unitale;
+	
+end;
+
+
+# The result
+# ==========
+#
+# b:=suche_unitale()
+#
+# Add to each arcuate block in b the point 1 = ()
+# Then b = [ [ [ (), (3,4,5), (2,3,4), (1,3,2,5,4), (1,4,2) ], [ (), (2,3,5), (1,2,5,4,3), (1,3,5), (1,4,5) ] ],
+# [ [ (), (3,4,5), (2,4,5), (1,2,4), (1,4,3,2,5) ], [ (), (2,3,4), (1,2,3), (1,4,3,5,2), (1,5,3) ] ],
+# [ [ (), (3,4,5), (2,5,3), (1,4,5), (1,5,2,4,3) ], [ (), (2,4,5), (1,2,3,5,4), (1,3,4,5,2), (1,5,2) ] ],
+# [ [ (), (3,4,5), (1,2,4,5,3), (1,5,2), (1,5,2,4,3) ], [ (), (2,3,5), (1,4,2), (1,5,3,4,2), (1,5,2,3,4) ] ],
+# [ [ (), (3,4,5), (1,2,5,3,4), (1,3,4), (1,4,2,3,5) ], [ (), (2,3,4), (2,5,4), (1,4,5,3,2), (1,5,4,2,3) ] ],
+# [ [ (), (3,4,5), (1,4,3,2,5), (1,5,3,4,2), (1,5,3) ], [ (), (2,3,5), (1,2,4,5,3), (1,5,2), (1,5,4) ] ] ]
+#
+# and it holds:
+# 
+# Set(erz^-1*b[1][1]*erz)=Set(b[3][1]), Set(erz^-1*b[1][2]*erz)=Set(b[3][2]*b[3][2][5]^-1)
+# Set(erz^-2*b[1][1]*erz^2)=Set(b[5][1]*b[5][1][4]^-1), Set(erz^-2*b[1][2]*erz^2)=Set(b[5][2]*b[5][2][3]^-1)
+# Set(erz^-3*b[1][1]*erz^3)=Set(b[6][2]*b[6][2][4]^-1), Set(erz^-3*b[1][2]*erz^3)=Set(b[6][1]*b[6][1][5]^-1)
+# Set(erz^-4*b[1][1]*erz^4)=Set(b[2][2]), Set(erz^-4*b[1][2]*erz^4)=Set(b[2][1])
+#
+# Hence, the sets of arcuate blocks b[i], i in [1,2,3,5,6], lead to isomorphic SL(2,4)-unitals.
+#
+
+
+

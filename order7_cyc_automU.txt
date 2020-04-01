@@ -1,0 +1,151 @@
+
+# Search for affine SL(2,7)-unitals with cyclic S and automorphism u
+# ==================================================================
+
+q:=7; p:=7;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=[[z^5,z^5],[z^2,z^5]];
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism u and the sets A and B
+# ---------------------------------------
+
+# u has order 4 in SL(2,7), but order 2 in PSL(2,7)
+u:=erz^2;
+
+# The set A of invariant points under conjugation by u
+A:=[];
+for x in menge do if x^u=x then Add(A,x); fi; od;
+#	Then A = []
+
+# The set B of points with x^u=x^-1
+B:=[];
+for x in menge do if x^u=x^-1 then Add(B,x); fi; od;
+
+# The set of points in B that contains only one point of each pair x and x^-1
+zweier:=[];
+for x in B do if not x^-1 in zweier then Add(zweier,x); fi; od;
+
+#	Then zweier = [ [ [ Z(7)^0, Z(7)^0 ], [ Z(7)^0, Z(7)^2 ] ], [ [ Z(7)^0, Z(7) ], [ Z(7), Z(7) ] ],
+#  [ [ Z(7)^0, Z(7)^2 ], [ Z(7)^2, Z(7)^5 ] ], [ [ Z(7)^0, Z(7)^3 ], [ Z(7)^3, Z(7)^2 ] ],
+#  [ [ Z(7)^0, Z(7)^4 ], [ Z(7)^4, Z(7) ] ], [ [ Z(7)^0, Z(7)^5 ], [ Z(7)^5, Z(7)^5 ] ],
+#  [ [ Z(7), 0*Z(7) ], [ 0*Z(7), Z(7)^5 ] ], [ [ Z(7), Z(7)^0 ], [ Z(7)^0, Z(7) ] ],
+#  [ [ Z(7), Z(7)^2 ], [ Z(7)^2, Z(7)^4 ] ], [ [ Z(7), Z(7)^5 ], [ Z(7)^5, Z(7)^4 ] ],
+#  [ [ Z(7)^2, 0*Z(7) ], [ 0*Z(7), Z(7)^4 ] ], [ [ Z(7)^2, Z(7) ], [ Z(7), Z(7)^5 ] ],
+#  [ [ Z(7)^2, Z(7)^2 ], [ Z(7)^2, Z(7)^3 ] ], [ [ Z(7)^2, Z(7)^4 ], [ Z(7)^4, Z(7)^5 ] ],
+#  [ [ Z(7)^2, Z(7)^5 ], [ Z(7)^5, Z(7)^3 ] ], [ [ Z(7)^3, Z(7)^0 ], [ Z(7)^0, Z(7)^5 ] ],
+#  [ [ Z(7)^3, Z(7) ], [ Z(7), Z(7)^4 ] ], [ [ Z(7)^3, Z(7)^3 ], [ Z(7)^3, Z(7)^5 ] ],
+#  [ [ Z(7)^3, Z(7)^4 ], [ Z(7)^4, Z(7)^4 ] ], [ [ Z(7)^4, Z(7)^0 ], [ Z(7)^0, Z(7)^4 ] ] ]
+
+# The other points in menge
+auswahlmenge:=Difference(menge,B);
+
+
+# Auxiliary function: Search for the three additional points w, x and y with given a, b, c and d in the set zweier
+# ----------------------------------------------------------------------------------------------------------------
+
+suche_block := function(a,b,c,d,output)
+	local w, x, y, testhut, testhut2, testhut3;
+	
+	for w in auswahlmenge do
+		if w^u=b*w*(a^-1) then
+			testhut:=hut([a,w,b*w]);
+			if Length(Intersection(menge,testhut))=12 then
+				for x in Difference(auswahlmenge,testhut) do
+					if x^u=c*x*(a^-1) then
+						testhut2:=hut([a,w,b*w,x,c*x]);
+						if Length(Intersection(menge,testhut2))=30 then
+							for y in Difference(auswahlmenge,testhut2) do
+								if y^u=d*y*(a^-1) then
+									testhut3:=hut([a,w,b*w,x,c*x,y,d*y]);
+									if Length(Intersection(menge,testhut3))=56 then	
+										Add(output,[a,w,b*w,x,c*x,y,d*y]);
+									fi;
+								fi;
+							od;
+						fi;
+					fi;
+				od;
+			fi;
+		fi;
+	od;
+	
+end;
+
+
+# Main function: Search all combinations of four points in zweier
+# ---------------------------------------------------------------
+
+suche_bloecke := function()
+	local zweier_bloecke, i, j, k, l;
+	
+	zweier_bloecke:=[];
+	
+	for i in [1..Length(zweier)] do for j in [i+1..Length(zweier)] do for k in [j+1..Length(zweier)] do for l in [k+1..Length(zweier)] do
+		suche_block(zweier[i],zweier[j],zweier[k],zweier[l],zweier_bloecke);
+	od; od; od; od;
+	
+	return zweier_bloecke;
+	
+end;
+
+
+# Create a list of all sets of quotients of a given list of blocks
+# ----------------------------------------------------------------
+
+berechne_hutpositionen := function(bloecke)
+local b, hutpositionen, x;
+
+	hutpositionen:=[];
+
+	for b in bloecke do
+		Add(hutpositionen,Set(List(Difference(hut(b),[IdentityMat(2,GF(7))]),x->Position(menge,x))));
+	od;
+	
+	return(Set(hutpositionen));
+	
+end;
+
+
+# The result
+# ==========
+#
+# suche_bloecke() yields a list of 19500 arcuate blocks and
+# berechne_hutpositionen(suche_bloecke()) yields a set of 19500 56-element subsets of [1..280]
+#
+
+
+
+

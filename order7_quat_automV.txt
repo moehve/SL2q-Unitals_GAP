@@ -1,0 +1,186 @@
+
+# Search for affine SL(2,7)-unitals with S quaternion and automorphism v
+# ======================================================================
+
+q:=7; p:=7;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# The generators of the group S
+erz1:=[[-1,2],[-1,1]]*z^0;
+erz2:=[[1,1],[-2,-1]]*z^0;
+S:=Elements(Group(erz1,erz2));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism v and the set A
+# --------------------------------
+
+v:=[[-2,-3],[0,3]]*z^0;
+
+# The set A of invariant points under conjugation by v
+A:=[];
+for x in menge do if x^v=x then Add(A,x); fi; od;
+
+# The set of points in A that contains only one point of each pair x an x^-1
+inv:=[];
+for x in A do if not x^-1 in inv then Add(inv,x); fi; od;
+
+#	Then inv = [ [ [ Z(7), Z(7) ], [ 0*Z(7), Z(7)^5 ] ], [ [ Z(7)^2, Z(7) ], [ 0*Z(7), Z(7)^4 ] ] ]
+
+
+# The other points in menge
+auswahlmenge:=Difference(menge,A);
+
+  
+# Auxiliary function: Search for the three additional points w, x and y with given a in inv
+# -----------------------------------------------------------------------------------------
+
+suche_blocka := function(a,output)
+	local w, x, y, testhut, drei;
+	
+	for drei in IteratorOfCombinations(auswahlmenge,3) do
+		w:=StructuralCopy(drei[1]); x:=StructuralCopy(drei[2]); y:=StructuralCopy(drei[3]);
+		testhut:=hut([a,w,x,y,w^v,x^v,y^v]);
+		if Length(Intersection(menge,testhut))=56 then
+			Add(output,[a,w,x,y,w^v,x^v,y^v]);
+		fi;
+	od;
+	
+end;
+
+
+# Create a list of all sets of quotients of a given list of blocks
+# ----------------------------------------------------------------
+
+berechne_hutpositionen := function(bloecke)
+local b, hutpositionen, x;
+
+	hutpositionen:=[];
+
+	for b in bloecke do
+		Add(hutpositionen,Set(List(Difference(hut(b),[IdentityMat(2,GF(7))]),x->Position(menge,x))));
+	od;
+	
+	return(Set(hutpositionen));
+	
+end;
+
+
+# Auxiliary function: Search in a given set for a block D such that D*, D*^v and D*^(v^2) are contained in the set and have pairwise empty intersection
+# -----------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Set of quotients conjugated by v
+grhut := function(block)
+	return Union(hut(block),v^-1*hut(block)*v,v^-2*hut(block)*v^2);
+end;
+
+# Search for the block (with one preset element)
+suche_block := function(set,output)
+local d,e,f,g,h,i,block;
+	
+		block:=[set[1]];
+		for d in Difference(set,grhut(block)) do
+			Add(block,d); 
+			if Length(Intersection(set,grhut(block)))=2*3*3 then
+				for e in Difference(set{[Position(set,d)..Length(set)]},grhut(block)) do
+					Add(block,e);
+					if Length(Intersection(set,grhut(block)))=3*4*3 then
+						for f in Difference(set{[Position(set,e)..Length(set)]},grhut(block)) do
+							Add(block,f); 
+							if Length(Intersection(set,grhut(block)))=4*5*3 then
+								for g in Difference(set{[Position(set,f)..Length(set)]},grhut(block)) do
+									Add(block,g);
+									if Length(Intersection(set,grhut(block)))=5*6*3 then
+										for h in Difference(set{[Position(set,g)..Length(set)]},grhut(block)) do
+											Add(block,h);
+											if Length(Intersection(set,grhut(block)))=6*7*3 then
+												for i in Difference(set{[Position(set,h)..Length(set)]},grhut(block)) do
+													Add(block,i);
+													if Length(Intersection(set,grhut(block)))=7*8*3 then
+														Add(output,block);
+													fi;
+													Remove(block);
+												od;
+											fi;
+											Remove(block);
+										od;
+									fi;
+									Remove(block);
+								od;
+							fi;
+							Remove(block);
+						od;
+					fi;
+					Remove(block);
+				od;
+			fi;
+			Remove(block);
+		od;		
+
+end;
+
+
+# Main function: For each two v-invariant blocks with disjoint sets of quotients, search for a block of above type in the remainder of menge
+# ------------------------------------------------------------------------------------------------------------------------------------------
+
+suche_unitale := function()
+local invbloecke1, invbloecke2, huete1, huete2, unitale, a, b;
+
+	invbloecke1:=[];
+	suche_blocka(inv[1],invbloecke1);
+	huete1:=berechne_hutpositionen(invbloecke1);
+	
+	invbloecke2:=[];
+	suche_blocka(inv[2],invbloecke2);
+	huete2:=berechne_hutpositionen(invbloecke2);
+	
+	unitale:=[];
+	for a in huete1 do for b in huete2 do
+		if Intersection(a,b)=[] then
+			suche_block(menge{Difference([1..280],Union(a,b))},unitale);
+		fi;
+	od; od;
+	
+	return unitale;
+
+end;
+
+
+
+# The result
+# ==========
+#
+# suche_unitale() = []
+#
+
+
+
+

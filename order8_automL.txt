@@ -1,0 +1,356 @@
+
+# Search for affine SL(2,8)-unitals with automorphism phi such that phi fixes none of the hats
+# ============================================================================================
+
+# We will use PSL(2,8) for this search
+q:=8; p:=2;
+sl:=Elements(PSL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=(1,8,4,3,9,5,2,6,7);
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism phi
+# --------------------
+
+phi:=(1,3,2)(4,7,5);
+
+
+# Conjugate a set by phi
+# ----------------------
+
+grhut := function(set)
+	return Union(set,phi^-1*set*phi,phi^-2*set*phi^2);
+end;
+
+
+# Auxiliary function: Search in a set of 216 points for a block that generates three hats in this set under conjugation by phi
+# ----------------------------------------------------------------------------------------------------------------------------
+
+suche_block := function(testmenge)
+local a,b,c,d,e,f,g, fix, block, auswahlmenge, auswahlmenge2, auswahlmenge3, auswahlmenge4, auswahlmenge5, auswahlmenge6, auswahlmenge7,
+	raus, raus2, raus3, raus4, raus5, raus6, raus7, neu, x, y, positionen, test;
+
+	fix:=ShallowCopy(testmenge[1]);
+	block:=[fix];
+	
+	auswahlmenge:=Difference(testmenge,grhut(hut(block)));
+	raus:=[];
+	for y in auswahlmenge do		
+		test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+		if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+			Add(raus,y);
+		fi;
+	od;
+	auswahlmenge:=Difference(auswahlmenge,raus);
+	
+	for a in auswahlmenge do		
+		neu:=Union(block*(a^-1),a*List(block,x->x^-1),[a,a^-1]);
+		Add(block,a);
+		auswahlmenge2:=Difference(auswahlmenge,grhut(neu));
+		raus2:=testmenge{[1..Position(testmenge,a)]};
+		for y in auswahlmenge2 do		
+			test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+			if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+				Add(raus2,y);
+			fi;
+		od;
+		auswahlmenge2:=Difference(auswahlmenge2,raus2);
+		
+		for b in auswahlmenge2 do
+			neu:=Union(block*(b^-1),b*List(block,x->x^-1),[b,b^-1]);
+			Add(block,b);
+			auswahlmenge3:=Difference(auswahlmenge2,grhut(neu));
+			raus3:=testmenge{[1..Position(testmenge,b)]};
+			for y in auswahlmenge3 do		
+				test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+				if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+					Add(raus3,y);
+				fi;
+			od;
+			auswahlmenge3:=Difference(auswahlmenge3,raus3);
+		
+			for c in auswahlmenge3 do
+				neu:=Union(block*(c^-1),c*List(block,x->x^-1),[c,c^-1]);
+				Add(block,c);
+				auswahlmenge4:=Difference(auswahlmenge3,grhut(neu));
+				raus4:=testmenge{[1..Position(testmenge,c)]};
+				for y in auswahlmenge4 do		
+					test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+					if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+						Add(raus4,y);
+					fi;
+				od;
+				auswahlmenge4:=Difference(auswahlmenge4,raus4);
+				
+				for d in auswahlmenge4 do
+					neu:=Union(block*(d^-1),d*List(block,x->x^-1),[d,d^-1]);
+					Add(block,d);
+					auswahlmenge5:=Difference(auswahlmenge4,grhut(neu));
+					raus5:=testmenge{[1..Position(testmenge,d)]};
+					for y in auswahlmenge5 do		
+						test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+						if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+							Add(raus5,y);
+						fi;
+					od;
+					auswahlmenge5:=Difference(auswahlmenge5,raus5);
+								
+					for e in auswahlmenge5 do
+						neu:=Union(block*(e^-1),e*List(block,x->x^-1),[e,e^-1]);
+						Add(block,e);
+						auswahlmenge6:=Difference(auswahlmenge5,grhut(neu));
+						raus6:=testmenge{[1..Position(testmenge,e)]};
+						for y in auswahlmenge6 do		
+							test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+							if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+								Add(raus6,y);
+							fi;
+						od;
+						auswahlmenge6:=Difference(auswahlmenge6,raus6);
+										
+						for f in auswahlmenge6 do
+							neu:=Union(block*(f^-1),f*List(block,x->x^-1),[f,f^-1]);
+							Add(block,f);
+							auswahlmenge7:=Difference(auswahlmenge6,grhut(neu));
+							raus7:=testmenge{[1..Position(testmenge,f)]};
+							for y in auswahlmenge7 do		
+								test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+								if Length(test) < (Length(block)+1)*2 or Length(Intersection(testmenge,grhut(test))) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0 then
+									Add(raus7,y);
+								fi;
+							od;
+							auswahlmenge7:=Difference(auswahlmenge7,raus7);
+												
+							for g in auswahlmenge7 do
+								Add(block,g);
+								return block;
+								Remove(block);
+							od;
+												
+							Remove(block);
+						od;
+										
+						Remove(block);
+					od;
+								
+					Remove(block);
+				od;
+						
+				Remove(block);
+			od;
+				
+			Remove(block);
+		od;
+		
+		Remove(block);
+	od;
+	
+	return([]);
+
+end;
+
+
+# Main function: Search menge for all blocks that generate three disjoint hats under conjugation by phi
+# -----------------------------------------------------------------------------------------------------
+
+krasse_suche := function()
+local unitale, a,b,c,d,e,f,g, fix, block, auswahlmenge, auswahlmenge2, auswahlmenge3, auswahlmenge4, auswahlmenge5, auswahlmenge6, auswahlmenge7,
+	raus, raus2, raus3, raus4, raus5, raus6, raus7, neu, test, x, y, ergebnis;
+	
+	unitale:=[];
+	
+	fix:=StructuralCopy(menge[1]);
+	block:=[fix];
+	
+	auswahlmenge:=Difference(menge,grhut(hut(block)));
+	raus:=[];
+	for y in auswahlmenge do		
+		test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+		if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+				or Intersection(S,test) <> [] then
+			Add(raus,y);
+		fi;
+	od;
+	auswahlmenge:=Difference(auswahlmenge,raus);
+	
+	for a in auswahlmenge do
+		neu:=Union(block*(a^-1),a*List(block,x->x^-1),[a,a^-1]);
+		Add(block,a);
+		auswahlmenge2:=Difference(auswahlmenge,grhut(neu));
+		raus2:=menge{[1..Position(menge,a)]};
+		for y in auswahlmenge2 do		
+			test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+			if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+					or Intersection(S,test) <> [] then
+				Add(raus2,y);
+			fi;
+		od;
+		auswahlmenge2:=Difference(auswahlmenge2,raus2);
+		
+		for b in auswahlmenge2 do
+			neu:=Union(block*(b^-1),b*List(block,x->x^-1),[b,b^-1]);
+			Add(block,b);
+			auswahlmenge3:=Difference(auswahlmenge2,grhut(neu));
+			raus3:=menge{[1..Position(menge,b)]};
+			for y in auswahlmenge3 do		
+				test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+				if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+						or Intersection(S,test) <> [] then
+					Add(raus3,y);
+				fi;
+			od;
+			auswahlmenge3:=Difference(auswahlmenge3,raus3);
+		
+			for c in auswahlmenge3 do
+				neu:=Union(block*(c^-1),c*List(block,x->x^-1),[c,c^-1]);
+				Add(block,c);
+				auswahlmenge4:=Difference(auswahlmenge3,grhut(neu));
+				raus4:=menge{[1..Position(menge,c)]};
+				for y in auswahlmenge4 do		
+					test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+					if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+							or Intersection(S,test) <> [] then
+						Add(raus4,y);
+					fi;
+				od;
+				auswahlmenge4:=Difference(auswahlmenge4,raus4);
+				
+				for d in auswahlmenge4 do
+					neu:=Union(block*(d^-1),d*List(block,x->x^-1),[d,d^-1]);
+					Add(block,d);
+					auswahlmenge5:=Difference(auswahlmenge4,grhut(neu));
+					raus5:=menge{[1..Position(menge,d)]};
+					for y in auswahlmenge5 do		
+						test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+						if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+								or Intersection(S,test) <> [] then
+							Add(raus5,y);
+						fi;
+					od;
+					auswahlmenge5:=Difference(auswahlmenge5,raus5);
+								
+					for e in auswahlmenge5 do
+						neu:=Union(block*(e^-1),e*List(block,x->x^-1),[e,e^-1]);
+						Add(block,e);
+						auswahlmenge6:=Difference(auswahlmenge5,grhut(neu));
+						raus6:=menge{[1..Position(menge,e)]};
+						for y in auswahlmenge6 do		
+							test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+							if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+									or Intersection(S,test) <> [] then
+								Add(raus6,y);
+							fi;
+						od;
+						auswahlmenge6:=Difference(auswahlmenge6,raus6);
+										
+						for f in auswahlmenge6 do
+							neu:=Union(block*(f^-1),f*List(block,x->x^-1),[f,f^-1]);
+							Add(block,f);
+							auswahlmenge7:=Difference(auswahlmenge6,grhut(neu));
+							raus7:=menge{[1..Position(menge,f)]};
+							for y in auswahlmenge7 do		
+								test:=Union(block*(y^-1),y*List(block,x->x^-1),[y,y^-1]);
+								if Length(test) < (Length(block)+1)*2 or Length(grhut(test)) < (Length(block)+1)*6 or Length(Intersection(grhut(hut(block)),grhut(test))) > 0
+										or Intersection(S,test) <> [] then
+									Add(raus7,y);
+								fi;
+							od;
+							auswahlmenge7:=Difference(auswahlmenge7,raus7);
+												
+							for g in auswahlmenge7 do
+								Add(block,g);
+								ergebnis:=suche_block(Difference(menge,grhut(hut(block))));
+								if not ergebnis = [] then
+									# A unital is found
+									Add(unitale,[StructuralCopy(block),StructuralCopy(ergebnis)]);
+								fi;
+								Remove(block);
+							od;
+												
+							Remove(block);
+						od;
+										
+						Remove(block);
+					od;
+								
+					Remove(block);
+				od;
+						
+				Remove(block);
+			od;
+				
+			Remove(block);
+		od;
+		
+		Remove(block);
+	od;
+	
+	return unitale;
+
+end;
+
+
+# The result
+# ==========
+#
+# krasse_suche()= 
+#	[ [ [ (3,4,5,6,7,8,9), (1,2,4,6,9,5,7), (1,5,8,9,3,6,2), (1,5,4,9,7,6,2,8,3), (1,6,3)(2,8,5)(4,7,9), (1,7,6,3,8,5,4,2,9), (1,8,6,9,5,3,2,7,4), (1,8,4,6,5,7,3,2,9) ],
+#		[ [ (2,3,6,8,5,4,9), (2,4,8,3,9,5,6), (1,4,3,6,8,9,7), (1,4,8,5,2,3,9,7,6), (1,6,7,5,4,3,8,9,2), (1,6,7,3,9,4,8), (1,7,6)(2,4,3)(5,8,9), (1,9,2,5,4,7,6) ] ] ],
+#	[ [ (3,4,5,6,7,8,9), (1,2,4,9,6,8,3,7,5), (1,5,3)(2,6,4)(7,9,8), (1,6,5,9,7,4,3,2,8), (1,6,8,3,2,9,5,4,7), (1,7,5,8,4,9,2,6,3), (1,8,2)(3,5,9)(4,6,7), (1,9,8,7,2,3,6) ],
+#		[ [ (2,3,4,8,6,5,7), (2,5,8,3,7,6,4), (1,5,9,3,7,2,8,6,4), (1,6,5,7,9,8,2), (1,6,4,3,7,9,5), (1,6,7,9,3,2,5,8,4), (1,7,2,5,8,6,9), (1,9,3,6,5,7,4) ] ] ],
+#	[ [ (3,4,5,6,7,8,9), (1,2,5)(3,8,4)(6,9,7), (1,3,7,2,4,5,6), (1,5,2,7,8,4,6,9,3), (1,7,3,2,6,8,5,9,4), (1,7,5,3,2,9,8), (1,8,5,9,2,7,6,4,3), (1,9,4,7,5,3,6,8,2) ],
+#		[ [ (2,3,4,8,6,5,7), (2,5,8,3,7,6,4), (1,2,3,6,7,4,8,9,5), (1,5,9,4,8,2,3), (1,5,9)(2,7,4)(3,6,8), (1,5,9,3,7,2,8,6,4), (1,6,4,3,7,9,5), (1,9,3,6,5,7,4) ] ] ],
+#	[ [ (3,4,5,6,7,8,9), (1,2,6,7,5,3,4), (1,5,2,7,8,4,6,9,3), (1,5,2,9,4,3,7,6,8), (1,7,3,2,6,8,5,9,4), (1,7,5,3,2,9,8), (1,8,4,5,6,9,2), (1,8,5,9,2,7,6,4,3) ],
+#		[ [ (2,4,9,3,5,8,7), (1,2,3,8,5,7,9,6,4), (1,2,4,9,6,8,3,7,5), (1,4,6,7,9,2,3), (1,4,6)(2,5,7)(3,8,9), (1,6,8,9,4,2,5), (1,8,7,3,5,6,4), (1,8,3)(2,9,4)(5,6,7) ] ] ],
+#	[ [ (3,4,5,6,7,8,9), (1,2,6,3,9,8,5), (1,3,7,6,9,5,4,8,2), (1,4,6)(2,5,7)(3,8,9), (1,5,4,9,7,6,2,8,3), (1,6,3)(2,8,5)(4,7,9), (1,8,6,9,5,3,2,7,4), (1,8,4,6,5,7,3,2,9) ],
+#		[ [ (2,3,4,8,6,5,7), (2,5,8,3,7,6,4), (1,5,9,3,7,2,8,6,4), (1,6,5,7,9,8,2), (1,6,4,3,7,9,5), (1,6,7,9,3,2,5,8,4), (1,7,2,5,8,6,9), (1,9,3,6,5,7,4) ] ] ],
+#	[ [ (3,4,5,6,7,8,9), (1,2,9,3,8,6,7), (1,3,4,9,8,7,5,6,2), (1,5,3)(2,6,4)(7,9,8), (1,5,9)(2,7,4)(3,6,8), (1,6,5,9,7,4,3,2,8), (1,6,8,3,2,9,5,4,7), (1,7,5,8,4,9,2,6,3) ],
+#		[ [ (2,3,4,8,6,5,7), (2,8,7,4,5,3,6), (1,2,7,9,5,8,3), (1,2,8,7,9,3,4,6,5), (1,6,5,8,3,4,9), (1,6,4,9,2,8,7), (1,8,9,2,3,5,7), (1,9,2,4,5,8,3,6,7) ] ] ] ]
+#	
+#
+# Note that it is easy (and highly recommended!) to parallelize this search by restricting the position of a in the set auswahlmenge in the main function.
+#
+# The fourth result yields the classical affine unital,
+# the sixth result yields the Weihnachtsunital, the first and third one yield the Weihnachtsunital conjugated by erz and erz^2, resp.
+# For the second and fifth result, there is one more possible second block each (note that we broke the search for the second block after one block was found)
+# and we get the Osterunital conjugated by f from the fifth result and the Osterunital from the second result with second block
+#	[ (2,3,4,8,6,5,7), (2,8,7,4,5,3,6), (1,2,8,7,9,3,4,6,5), (1,4,8,6,9,3,5), (1,6,5,8,3,4,9), (1,6,2,7,4,9,3,8,5), (1,6,4,9,2,8,7), (1,9,7,4,8,6,2) ]
+# and the Pfingtsunital from the second result and the Pfingstunital conjugated by f from the fifth result with second block
+#	[ (2,3,4,8,6,5,7), (2,8,7,4,5,3,6), (1,2,8,7,9,3,4,6,5), (1,4,8,6,9,3,5), (1,6,5,8,3,4,9), (1,6,2,7,4,9,3,8,5), (1,6,4,9,2,8,7), (1,9,7,4,8,6,2) ].
+#
+
+
+
+
+
+

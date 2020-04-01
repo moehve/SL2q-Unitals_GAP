@@ -1,0 +1,137 @@
+
+# Search for affine SL(2,8)-unitals with automorphism u such that u fixes every ^D
+# ================================================================================
+
+q:=8; p:=2;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=[[z^2,z^4],[z^4,z]];
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism u and the sets A and dreier
+# --------------------------------------------
+
+u:=erz^3;
+
+# The set A of invariant points under conjugation by u
+A:=[];
+for x in menge do if x^u=x then Add(A,x); fi; od;
+#	Then A = []
+
+# The set of points in menge with x^(u^2)=(x^u*x)^-1
+dreier_lang:=[];
+for x in menge do if x^(u^2)=(x^u*x)^-1 then Add(dreier_lang,x); fi; od;
+
+# The set of points in dreier_lang that contains only one point of each set {x,x^u,x^(u^2)}
+dreier:=[];
+for x in dreier_lang do if not x^u in dreier and not x^(u^2) in dreier then Add(dreier,x); fi; od;
+
+#	Then dreier = [ [ [ Z(2)^0, Z(2^3) ], [ Z(2^3), Z(2^3)^6 ] ], [ [ Z(2)^0, Z(2^3)^2 ], [ Z(2^3)^2, Z(2^3)^5 ] ],
+#  [ [ Z(2)^0, Z(2^3)^3 ], [ Z(2^3)^3, Z(2^3)^2 ] ], [ [ Z(2)^0, Z(2^3)^4 ], [ Z(2^3)^4, Z(2^3)^3 ] ],
+#  [ [ Z(2)^0, Z(2^3)^5 ], [ Z(2^3)^5, Z(2^3) ] ], [ [ Z(2)^0, Z(2^3)^6 ], [ Z(2^3)^6, Z(2^3)^4 ] ],
+#  [ [ Z(2^3), 0*Z(2) ], [ Z(2^3)^3, Z(2^3)^6 ] ], [ [ Z(2^3), Z(2)^0 ], [ Z(2^3), Z(2^3)^2 ] ],
+#  [ [ Z(2^3), Z(2^3) ], [ Z(2)^0, Z(2^3)^2 ] ], [ [ Z(2^3), Z(2^3)^2 ], [ Z(2^3)^5, 0*Z(2) ] ],
+#  [ [ Z(2^3), Z(2^3)^3 ], [ 0*Z(2), Z(2^3)^6 ] ], [ [ Z(2^3), Z(2^3)^4 ], [ Z(2^3)^6, Z(2)^0 ] ],
+#  [ [ Z(2^3), Z(2^3)^5 ], [ Z(2^3)^2, 0*Z(2) ] ], [ [ Z(2^3), Z(2^3)^6 ], [ Z(2^3)^4, Z(2)^0 ] ],
+#  [ [ Z(2^3)^2, Z(2^3) ], [ Z(2^3)^5, Z(2)^0 ] ], [ [ Z(2^3)^2, Z(2^3)^3 ], [ Z(2^3)^4, 0*Z(2) ] ],
+#  [ [ Z(2^3)^2, Z(2^3)^4 ], [ Z(2^3)^3, 0*Z(2) ] ], [ [ Z(2^3)^2, Z(2^3)^5 ], [ Z(2^3), Z(2)^0 ] ] ]
+
+
+# The other points in menge
+auswahlmenge:=Difference(menge,dreier_lang);
+
+
+# Auxiliary function: Search for the two additional points x and y with given a, b, c in dreier
+# ---------------------------------------------------------------------------------------------
+
+suche_block := function(a,b,c,output)
+	local x, y;
+	
+	for x in auswahlmenge do for y in auswahlmenge do
+		if Length(Intersection(menge,hut([a,a^u*a,x,b*x,b^u*b*x,y,c*y,c^u*c*y])))=72 then
+			Add(output,StructuralCopy([a,a^u*a,x,b*x,b^u*b*x,y,c*y,c^u*c*y]));
+		fi;
+	od; od;
+	
+end;
+
+
+# Main function: Search all three-element subsets of the set dreier
+# -----------------------------------------------------------------
+
+suche_bloecke := function()
+	local i, j, k, bloecke;
+	
+	bloecke:=[];
+	
+	for i in [1..Length(dreier)] do for j in [i+1..Length(dreier)] do for k in [j+1..Length(dreier)] do
+		suche_block(dreier[i],dreier[j],dreier[k],bloecke);
+	od; od; od;
+	
+	return bloecke;
+	
+end;
+
+
+# Create a list of all sets of quotients of a given list of blocks
+# ----------------------------------------------------------------
+
+berechne_hutpositionen := function(bloecke)
+local b, hutpositionen, x;
+
+	hutpositionen:=[];
+
+	for b in bloecke do
+		Add(hutpositionen,Set(List(Difference(hut(b),[IdentityMat(2,GF(q))]),x->Position(menge,x))));
+	od;
+	
+	return(Set(hutpositionen));
+	
+end;
+
+
+# The result
+# ==========
+#
+# suche_bloecke() yields a list of 348715 arcuate blocks and
+# berechne_hutpositionen(suche_bloecke()) yields a set of 348715 72-element subsets of [1..432]
+#
+# Note that this search does not only compute such blocks that u acts as an automorphism.
+# But all such blocks are contained in the search.
+#
+
+
+
+
+

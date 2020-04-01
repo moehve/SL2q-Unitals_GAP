@@ -1,0 +1,107 @@
+
+# Search for affine SL(2,8)-unitals with automorphism f
+# =====================================================
+
+q:=8; p:=2;
+z:=Z(q);
+sl:=Elements(SL(2,q));
+
+
+# Auxiliary function that computes the set of all quotients in a given list
+# -------------------------------------------------------------------------
+
+hut := function(block)
+	local hut, x, y;
+	
+	hut:=StructuralCopy(block);
+	
+	for x in block do
+		Add(hut,x^-1);
+		for y in block do Add(hut,x*(y^-1)); od;
+	od;
+	
+	return Set(hut);
+end;
+
+
+# Construction of the set "menge" of points that lie on arcuate blocks through the point 1
+# ----------------------------------------------------------------------------------------
+
+# A generator of the group S
+erz:=[[z^2,z^4],[z^4,z]];
+S:=Elements(Group(erz));
+
+# The elements of order p (= The elements of the Sylow p-subgroups of SL(2,q))
+ordnungp:=[];
+for x in sl do if Order(x)=p then Add(ordnungp,x); fi; od;
+
+# The set menge
+menge:=Difference(sl,Union(S,ordnungp));
+
+
+# The automorphism f and the sets A and B
+# ---------------------------------------
+
+f:=[[0,1],[1,0]]*z^0;
+
+# The set A of invariant points under conjugation by f
+A:=[];
+for x in menge do if x^f=x then Add(A,x); fi; od;
+#	Then A = []
+
+# The set B of points with x^f=x^-1
+B:=[];
+for x in menge do if x^f=x^-1 then Add(B,x); fi; od;
+
+# The other points in menge such that auswahlmenge contains only one point of each pair x, x^f
+auswahlmenge:=[];
+for x in Difference(menge,B) do if not x^f in auswahlmenge then Add(auswahlmenge,x); fi; od;
+
+
+# Search for fixed blocks under conjugation by f
+# ----------------------------------------------
+
+suche_bloecke := function()
+local finv, x, block, i;
+
+	finv:=[];
+
+	for x in IteratorOfCombinations(auswahlmenge,4) do
+		block:=StructuralCopy(x);
+		for i in [1..4] do Add(block,x[i]^f); od;
+		if Length(Intersection(hut(block),menge))=72 then 
+			Add(finv,StructuralCopy(block));
+		fi;
+	od;
+	
+	return finv;
+
+end;
+
+
+# Create a list of all sets of quotients of a given list of blocks
+# ----------------------------------------------------------------
+
+berechne_hutpositionen := function(bloecke)
+local b, hutpositionen, x;
+
+	hutpositionen:=[];
+
+	for b in bloecke do
+		Add(hutpositionen,Set(List(Difference(hut(b),[IdentityMat(2,GF(q))]),x->Position(menge,x))));
+	od;
+	
+	return(Set(hutpositionen));
+	
+end;
+
+
+# The result
+# ==========
+#
+# suche_bloecke() yields a list of 270369 arcuate blocks and
+# berechne_hutpositionen(suche_bloecke()) yields a set of 270252 72-element subsets of [1..432]
+# 	
+
+
+

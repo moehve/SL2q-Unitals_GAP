@@ -1,0 +1,201 @@
+
+# Search for all parallelisms on the short blocks
+# ===============================================
+
+# Works fine for q up to 5 (though you might want to parallelize the search "alle_klassen" for q=5)
+
+# Set q and p:
+# q:= ;
+# p:= ;
+
+# The set of Sylow p-subgroups of SL(2,q)
+sylows:=Orbit(SL(2,q),SylowSubgroup(SL(2,q),p));
+sl:=Elements(SL(2,q));
+	
+# The set of short blocks (i.e. all right cosets of all Sylow p-subgroups)
+blocks:=[];;
+for t in sylows do
+	for x in RightCosets(SL(2,q),t) do 			
+		Add(blocks,Elements(x));
+	od;
+od;
+	
+# Abstract description of the blocks
+blocklist:=[];
+for b in blocks do
+	Add(blocklist,Set(List(b,x->Position(sl,x))));
+od;
+	
+blocklist:=Set(blocklist);
+	
+
+# Auxiliary function: Search for all possible parallel classes containing q^2-1 blocks
+# ------------------------------------------------------------------------------------
+
+alle_klassen := function()
+local klassen, x, suche_klassen;
+
+	klassen:=[];
+	
+	# Search for all parallel classes containing the z-th block in blocklist
+	suche_klassen := function(z)
+	local testlisten, klasse, x, zaehler;
+
+		testlisten:=[];
+		klasse:=[blocklist[z]];
+		testlisten[1]:=[];
+		for x in blocklist do 
+			if Intersection(klasse[1],x)=[] then 
+				Add(testlisten[1],x); 
+			fi; 
+		od;
+		zaehler:=2;
+		
+		while zaehler>1 do
+			
+			if Length(testlisten[zaehler-1])>0 then
+				Add(klasse,testlisten[zaehler-1][1]);
+				testlisten[zaehler]:=[];
+				for x in testlisten[zaehler-1] do 
+					if Intersection(klasse[zaehler],x)=[] then 
+						Add(testlisten[zaehler],x); 
+					fi; 
+				od;
+				zaehler:=zaehler+1;
+				if zaehler=q^2 then 
+					# A parallel class is found
+					Add(klassen[z],StructuralCopy(klasse)); 
+				fi;
+			else
+				zaehler:=zaehler-1;
+				if zaehler>1 then
+					Remove(testlisten[zaehler-1],1);
+					Remove(klasse);	
+				fi;
+			fi;	
+			
+		od;
+		
+	end;
+	
+	# The first q+1 blocks of the set (!) blocklist belong to different parallel classes, since they share a common point
+	for x in [1..q+1] do
+		Add(klassen,[]);
+		suche_klassen(x);
+	od;
+	
+	# Returns a set of q+1 sets of possible parallel classes, one set for each point at infinity
+	return(klassen);
+
+end;
+
+
+
+# Main function: Search in a set of q+1 sets of parallel classes parclass for all sets of q+1 pairwise disjoint parallel classes
+# ------------------------------------------------------------------------------------------------------------------------------
+
+parallelismen := function(parclass)
+local paras, testlisten, para, zaehler, x, y, test;
+
+	paras:=[];
+	
+	testlisten:=[];
+	Add(testlisten,StructuralCopy(parclass[1]));
+	para:=[];
+	zaehler:=1;
+	
+	while zaehler>0 do
+	
+		if Length(testlisten[zaehler])>0 then
+			Add(para,testlisten[zaehler][1]);
+			testlisten[zaehler+1]:=[];
+			if zaehler < q+1 then 
+				for x in parclass[zaehler+1] do
+					for y in para do
+						test:=true;
+						if Intersection(y,x)<>[] then 
+							test:=false; 
+							break; 
+						fi;
+					od;
+					if test then 
+						Add(testlisten[zaehler+1],x); 
+					fi;
+				od;
+			fi;
+			zaehler:=zaehler+1;
+			if zaehler=q+2 then 
+				# A parallelism is found
+				Add(paras,Set(para)); 
+			fi;
+		else
+			zaehler:=zaehler-1;
+			if zaehler>0 then
+				Remove(testlisten[zaehler],1);
+				Remove(para);
+			fi;
+		fi;
+		
+	od;
+	
+	return(Set(paras));
+	
+end;
+
+
+# The result
+# ==========
+#
+# q = 3
+# -----
+#
+# parallelismen(alle_klassen()) returns a set of 26 sets of 4 pairwise disjoint partitions of [1..24] in 8 sets of size 3.
+# Translate the numbers back in elements of SL(2,q):
+# paras:=[];
+# for x in parallelismen(alle_klassen()) do 
+#	par:=[];
+#	for y in x do 
+#		pari:=[]; 
+#		for z in y do 
+#			Add(pari,Set(List(z,w->sl[w]))); 
+#		od; 
+#		Add(par,Set(pari)); 
+#	od; 
+#	Add(paras,Set(par)); 
+# od;
+#
+# Then, paras is the set of all parallelisms (26) on the short blocks for q=3.
+# 
+#
+# q = 4
+# -----
+#
+# parallelismen(alle_klassen()) returns a set of 182 sets of 5 pairwise disjoint partitions of [1..60] in 15 sets of size 4.
+# Translate the numbers back in elements of SL(2,q), as above.
+# Then, paras is the set of all parallelisms (182) on the short blocks for q=4.
+# 
+#
+# q = 5
+# -----
+#
+# parallelismen(alle_klassen()) returns a set of 122 sets of 6 pairwise disjoint partitions of [1..120] in 24 sets of size 5.
+# Translate the numbers back in elements of SL(2,q), as above.
+# Then, paras is the set of all parallelisms (122) on the short blocks for q=5.
+# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
